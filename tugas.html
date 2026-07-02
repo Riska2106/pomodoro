@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, maximum-scale=2.0">
+  <title> Pomodoro Timer | Fokus & Istirahat</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: linear-gradient(145deg, #2b2d42 0%, #1d1f2c 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, system-ui, -apple-system, sans-serif;
+      padding: 1.5rem;
+      margin: 0;
+    }
+
+    .pomodoro-card {
+      background: rgba(255, 248, 240, 0.08);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 3.5rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 30px 55px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      max-width: 550px;
+      width: 100%;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    h1 {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #f8f0e3;
+      font-weight: 500;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+      text-shadow: 0 4px 10px rgba(0,0,0,0.4);
+    }
+
+    h1 span {
+      font-size: 2.5rem;
+    }
+
+    .timer-display {
+      background: #0b0c14;
+      border-radius: 2.5rem;
+      padding: 2.2rem 1.2rem;
+      margin-bottom: 2rem;
+      box-shadow: inset 0 8px 12px rgba(0,0,0,0.7), 0 10px 20px rgba(0, 0, 0, 0.5);
+      border: 1px solid #3a3d55;
+      text-align: center;
+    }
+
+    #timeLeft {
+      font-size: clamp(4rem, 20vw, 7rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: #f7e3c0;
+      letter-spacing: 5px;
+      text-shadow: 0 0 15px #ff9f4b80;
+      line-height: 1.1;
+      background: linear-gradient(180deg, #fff2e0 0%, #e0a96d 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .session-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: rgba(255, 215, 150, 0.12);
+      padding: 0.6rem 1.8rem;
+      border-radius: 3rem;
+      margin-top: 1rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #ffcf9a;
+      border: 1px solid #ffb86c40;
+      backdrop-filter: blur(5px);
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2.2rem;
+    }
+
+    .btn {
+      background: #2f3246;
+      border: none;
+      padding: 0.9rem 1.8rem;
+      border-radius: 3rem;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      color: #ede7d9;
+      backdrop-filter: blur(10px);
+      background: rgba(55, 59, 80, 0.7);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex: 1 1 auto;
+      justify-content: center;
+      min-width: 85px;
+    }
+
+    .btn:hover {
+      background: #4a4f6a;
+      border-color: rgba(255, 180, 100, 0.5);
+      color: #ffffff;
+      box-shadow: 0 10px 22px rgba(0,0,0,0.6);
+      transform: translateY(-2px);
+    }
+
+    .btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 4px 12px black;
+    }
+
+    .btn.primary {
+      background: #e07b39;
+      border-color: #ffaa5e;
+      color: #0a0a0a;
+      font-weight: 700;
+      box-shadow: 0 0 20px #e07b3980;
+    }
+
+    .btn.primary:hover {
+      background: #f18d4c;
+    }
+
+    .settings-panel {
+      background: rgba(20, 22, 35, 0.7);
+      backdrop-filter: blur(16px);
+      border-radius: 2.2rem;
+      padding: 1.5rem 1.2rem;
+      margin-top: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 1.2rem;
+      justify-content: center;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      flex: 1 1 120px;
+      min-width: 100px;
+    }
+
+    .input-group label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #b9ad9a;
+      margin-left: 0.3rem;
+    }
+
+    .input-group input {
+      background: #1e212e;
+      border: 1px solid #4a4e66;
+      border-radius: 2rem;
+      padding: 0.7rem 0.8rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #ffdbb5;
+      text-align: center;
+      outline: none;
+      box-shadow: inset 0 2px 7px #00000050;
+      transition: 0.2s;
+    }
+
+    .input-group input:focus {
+      border-color: #e07b39;
+      box-shadow: 0 0 12px #e07b3970;
+    }
+
+    .apply-btn {
+      background: #3f435a;
+      border: none;
+      padding: 0.7rem 1.8rem;
+      border-radius: 2.5rem;
+      color: white;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: #5a5f7a;
+      margin-top: 0.3rem;
+      cursor: pointer;
+      transition: 0.2s;
+      border: 1px solid #8d93b0;
+    }
+
+    .apply-btn:hover {
+      background: #6e7396;
+    }
+
+    .notification-area {
+      margin-top: 1.2rem;
+      text-align: center;
+      font-weight: 500;
+      color: #ffbc7a;
+      min-height: 2.5rem;
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+    }
+
+    @media (max-width: 400px) {
+      .pomodoro-card {
+        padding: 1.8rem 1.2rem;
+      }
+      .btn {
+        padding: 0.7rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="pomodoro-card">
+    <h1>
+      <span></span> POMODORO
+    </h1>
+
+    <!-- Timer Display -->
+    <div class="timer-display">
+      <div id="timeLeft">25:00</div>
+      <div class="session-badge" id="sessionLabel">
+        <span></span> FOKUS
+      </div>
+    </div>
+
+    <!-- Tombol kontrol utama -->
+    <div class="controls">
+      <button class="btn" id="startPauseBtn" title="Mulai/Jeda">
+        <span></span> Mulai
+      </button>
+      <button class="btn" id="resetBtn" title="Reset ke pengaturan awal">
+        <span></span> Reset
+      </button>
+      <button class="btn" id="skipBtn" title="Lewati ke sesi berikutnya">
+        <span></span> Lewati
+      </button>
+    </div>
+
+    <!-- Panel ubah angka (menit) -->
+    <div class="settings-panel">
+      <div class="input-group">
+        <label> Fokus (menit)</label>
+        <input type="number" id="focusInput" value="25" min="1" max="99" step="1">
+      </div>
+      <div class="input-group">
+        <label> Istirahat Pendek</label>
+        <input type="number" id="shortBreakInput" value="5" min="1" max="30" step="1">
+      </div>
+      <div class="input-group">
+        <label> Istirahat Panjang</label>
+        <input type="number" id="longBreakInput" value="15" min="1" max="60" step="1">
+      </div>
+      <button class="apply-btn" id="applySettingsBtn">
+        <span>✔</span> Terapkan
+      </button>
+    </div>
+
+    <!-- Notifikasi visual (teks) -->
+    <div class="notification-area" id="notificationMessage">
+       Siap untuk fokus.
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // --- STATE ---
+      const modes = {
+        FOCUS: 'focus',
+        SHORT_BREAK: 'shortBreak',
+        LONG_BREAK: 'longBreak'
+      };
+
+      // Durasi default dalam MENIT
+      let focusMinutes = 25;
+      let shortBreakMinutes = 5;
+      let longBreakMinutes = 15;
+
+      // State saat ini
+      let currentMode = modes.FOCUS;       // 'focus', 'shortBreak', 'longBreak'
+      let timeRemainingSeconds = focusMinutes * 60; // dalam detik
+      let timerInterval = null;
+      let isRunning = false;
+
+      // DOM elements
+      const timeLeftEl = document.getElementById('timeLeft');
+      const sessionLabelEl = document.getElementById('sessionLabel');
+      const startPauseBtn = document.getElementById('startPauseBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const skipBtn = document.getElementById('skipBtn');
+      const focusInput = document.getElementById('focusInput');
+      const shortBreakInput = document.getElementById('shortBreakInput');
+      const longBreakInput = document.getElementById('longBreakInput');
+      const applySettingsBtn = document.getElementById('applySettingsBtn');
+      const notificationEl = document.getElementById('notificationMessage');
+
+      // --- FUNCTIONS ---
+
+      function formatTime(seconds) {
+        if (seconds < 0) seconds = 0;
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+
+      // Update UI timer & label
+      function updateDisplay() {
+        timeLeftEl.textContent = formatTime(timeRemainingSeconds);
+        
+        // Update badge sesuai mode
+        if (currentMode === modes.FOCUS) {
+          sessionLabelEl.innerHTML = '<span></span> FOKUS';
+        } else if (currentMode === modes.SHORT_BREAK) {
+          sessionLabelEl.innerHTML = '<span></span> ISTIRAHAT PENDEK';
+        } else if (currentMode === modes.LONG_BREAK) {
+          sessionLabelEl.innerHTML = '<span></span> ISTIRAHAT PANJANG';
+        }
+      }
+
+      // Hentikan timer dan bersihkan interval
+      function stopTimer() {
+        if (timerInterval) {
+          clearInterval(timerInterval);
+          timerInterval = null;
+        }
+        isRunning = false;
+        startPauseBtn.innerHTML = '<span></span> Mulai';
+      }
+
+      // Reset ke kondisi awal berdasarkan mode saat ini (durasi dari menit yang tersimpan)
+      function resetToCurrentModeDuration() {
+        stopTimer();
+        
+        if (currentMode === modes.FOCUS) {
+          timeRemainingSeconds = focusMinutes * 60;
+        } else if (currentMode === modes.SHORT_BREAK) {
+          timeRemainingSeconds = shortBreakMinutes * 60;
+        } else if (currentMode === modes.LONG_BREAK) {
+          timeRemainingSeconds = longBreakMinutes * 60;
+        }
+        
+        updateDisplay();
+        setNotification(` Timer direset. Mode: ${getModeName()}`);
+      }
+
+      function getModeName() {
+        if (currentMode === modes.FOCUS) return 'Fokus';
+        if (currentMode === modes.SHORT_BREAK) return 'Istirahat Pendek';
+        return 'Istirahat Panjang';
+      }
+
+      // Pindah ke mode berikutnya (otomatis setelah selesai atau skip)
+      function switchToNextMode() {
+        stopTimer(); // pastikan timer berhenti dulu
+        
+        if (currentMode === modes.FOCUS) {
+          // Setelah fokus, bisa istirahat pendek (default) atau panjang? 
+          // Biasanya setelah 4 fokus baru panjang, tapi kita buat sederhana: 
+          // Fokus -> Istirahat Pendek. Tapi kita beri fleksibilitas: user bisa atur manual.
+          // Untuk demo, kita putuskan: Fokus selalu ke short break. 
+          // (Panjang hanya jika diatur manual atau user skip lagi? 
+          // Biar tidak rumit: Fokus -> Short Break. Short Break -> Fokus. 
+          // Long break hanya bisa dipilih manual atau setelah di-set? 
+          // Kita tambahkan logika: jika user melakukan skip dari short break, kembali ke fokus.
+          // Long break tetap bisa diakses jika user set melalui apply? Tidak, itu durasi.
+          // Agar long break berguna, kita buat: setelah short break selesai -> fokus.
+          // Tapi kita beri opsi: tombol skip bisa dipakai untuk lompat.
+          // Lebih intuitif: Fokus -> Short Break, Short Break -> Fokus, 
+          // dan Long Break hanya jika dipilih manual? 
+          // Agar tidak membingungkan, kita implementasi sederhana:
+          // Fokus -> Short Break, Short Break -> Fokus, Long Break -> Fokus.
+          // User bisa mengubah mode dengan cara reset & atur durasi lalu apply? 
+          // Kita tambahkan kemampuan: skip dari fokus akan ke short break.
+          // Skip dari short break ke fokus. Skip dari long break ke fokus.
+          currentMode = modes.SHORT_BREAK;
+          timeRemainingSeconds = shortBreakMinutes * 60;
+          setNotification(' Waktu istirahat pendek!');
+        } else if (currentMode === modes.SHORT_BREAK) {
+          currentMode = modes.FOCUS;
+          timeRemainingSeconds = focusMinutes * 60;
+          setNotification(' Kembali fokus!');
+        } else if (currentMode === modes.LONG_BREAK) {
+          currentMode = modes.FOCUS;
+          timeRemainingSeconds = focusMinutes * 60;
+          setNotification(' Istirahat panjang selesai. Mulai fokus baru.');
+        }
+        
+        updateDisplay();
+        // Timer dalam keadaan berhenti, user harus menekan mulai lagi.
+      }
+
+      // Fungsi yang dipanggil ketika timer mencapai 0
+      function handleTimerComplete() {
+        stopTimer();
+        // Notifikasi visual kuat
+        if (currentMode === modes.FOCUS) {
+          setNotification(' FOKUS SELESAI! Saatnya istirahat. ');
+        } else if (currentMode === modes.SHORT_BREAK) {
+          setNotification(' Istirahat pendek selesai. Waktunya fokus lagi!');
+        } else if (currentMode === modes.LONG_BREAK) {
+          setNotification(' Istirahat panjang berakhir. Ayo kembali produktif!');
+        }
+        
+        // Otomatis pindah ke mode berikutnya
+        switchToNextMode();
+        // Setelah switch, timer berhenti. User bisa mulai lagi.
+      }
+
+      // Mulai timer (countdown)
+      function startTimer() {
+        if (isRunning) return;
+        if (timeRemainingSeconds <= 0) {
+          // Jika waktu habis, langsung trigger complete agar pindah mode
+          handleTimerComplete();
+          return;
+        }
+        
+        isRunning = true;
+        startPauseBtn.innerHTML = '<span>⏸</span> Jeda';
+        
+        timerInterval = setInterval(() => {
+          timeRemainingSeconds--;
+          updateDisplay();
+          
+          if (timeRemainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            isRunning = false;
+            startPauseBtn.innerHTML = '<span>▶</span> Mulai';
+            updateDisplay(); // tampilkan 00:00
+            handleTimerComplete();
+          }
+        }, 1000);
+      }
+
+      function pauseTimer() {
+        if (!isRunning) return;
+        stopTimer();
+        startPauseBtn.innerHTML = '<span>▶</span> Mulai';
+        setNotification(' Timer dijeda.');
+      }
+
+      function toggleStartPause() {
+        if (isRunning) {
+          pauseTimer();
+        } else {
+          // Jika waktu 0, trigger complete agar pindah mode
+          if (timeRemainingSeconds <= 0) {
+            handleTimerComplete();
+            // setelah switch, waktu baru, tapi timer tidak langsung mulai.
+            // user harus tekan mulai lagi.
+            return;
+          }
+          startTimer();
+        }
+      }
+
+      function setNotification(text) {
+        notificationEl.textContent = text;
+      }
+
+      // Reset penuh (user klik tombol reset)
+      function handleReset() {
+        stopTimer();
+        // Kembalikan ke mode fokus sebagai default? Atau reset sesuai mode sekarang?
+        // Biasanya reset mengembalikan ke mode fokus dengan durasi fokus.
+        // Agar sesuai ekspektasi: reset = kembali ke mode fokus dengan durasi fokus tersimpan.
+        currentMode = modes.FOCUS;
+        timeRemainingSeconds = focusMinutes * 60;
+        updateDisplay();
+        setNotification(' Direset ke Fokus. Siap mulai.');
+      }
+
+      // Skip ke mode berikutnya (user memaksa pindah)
+      function handleSkip() {
+        stopTimer();
+        // Pindah ke mode selanjutnya sesuai aturan switchToNextMode
+        switchToNextMode();
+        // Tidak otomatis mulai, biarkan user memutuskan.
+      }
+
+      // Terapkan pengaturan durasi dari input
+      function applySettings() {
+        // Ambil nilai, validasi
+        let newFocus = parseInt(focusInput.value, 10);
+        let newShort = parseInt(shortBreakInput.value, 10);
+        let newLong = parseInt(longBreakInput.value, 10);
+
+        if (isNaN(newFocus) || newFocus < 1) newFocus = 25;
+        if (isNaN(newShort) || newShort < 1) newShort = 5;
+        if (isNaN(newLong) || newLong < 1) newLong = 15;
+
+        // Batas aman
+        if (newFocus > 99) newFocus = 99;
+        if (newShort > 30) newShort = 30;
+        if (newLong > 60) newLong = 60;
+
+        // Update variabel
+        focusMinutes = newFocus;
+        shortBreakMinutes = newShort;
+        longBreakMinutes = newLong;
+
+        // Update input field biar sinkron
+        focusInput.value = focusMinutes;
+        shortBreakInput.value = shortBreakMinutes;
+        longBreakInput.value = longBreakMinutes;
+
+        // Jika timer sedang berjalan, hentikan dan reset ke mode saat ini dengan durasi baru?
+        // Atau cukup update durasi, dan jika sedang berjalan, biarkan? 
+        // Agar tidak bingung: hentikan timer, lalu reset waktu sesuai mode sekarang.
+        stopTimer();
+        
+        if (currentMode === modes.FOCUS) {
+          timeRemainingSeconds = focusMinutes * 60;
+        } else if (currentMode === modes.SHORT_BREAK) {
+          timeRemainingSeconds = shortBreakMinutes * 60;
+        } else if (currentMode === modes.LONG_BREAK) {
+          timeRemainingSeconds = longBreakMinutes * 60;
+        }
+        
+        updateDisplay();
+        setNotification(` Durasi diterapkan: Fokus ${focusMinutes}m, Pendek ${shortBreakMinutes}m, Panjang ${longBreakMinutes}m`);
+      }
+
+      // Inisialisasi event listener
+      function bindEvents() {
+        startPauseBtn.addEventListener('click', toggleStartPause);
+        resetBtn.addEventListener('click', handleReset);
+        skipBtn.addEventListener('click', handleSkip);
+        applySettingsBtn.addEventListener('click', applySettings);
+
+        // Optional: izinkan enter pada input untuk apply
+        const inputs = [focusInput, shortBreakInput, longBreakInput];
+        inputs.forEach(inp => {
+          inp.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+              applySettings();
+            }
+          });
+        });
+      }
+
+      // Set awal tampilan
+      function initialSetup() {
+        // sinkronisasi input dengan default
+        focusInput.value = focusMinutes;
+        shortBreakInput.value = shortBreakMinutes;
+        longBreakInput.value = longBreakMinutes;
+        
+        currentMode = modes.FOCUS;
+        timeRemainingSeconds = focusMinutes * 60;
+        updateDisplay();
+        setNotification(' ketika sudah mengatur waktu tekan mulai.');
+        stopTimer(); // pastikan tidak ada interval
+      }
+
+      // Jalankan
+      bindEvents();
+      initialSetup();
+    })();
+  </script>
+</body>
+</html>
